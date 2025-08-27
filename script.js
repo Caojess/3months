@@ -301,6 +301,9 @@ class LoveJourneyGame {
                 // TESTING SHORTCUT: Press 'T' to teleport to house for testing
                 if (e.key.toLowerCase() === 't') {
                     this.teleportToHouseForTesting();
+                // TESTING SHORTCUT: Press 'C' to complete all ingredients
+                } else if (e.key.toLowerCase() === 'c') {
+                    this.completeAllIngredients();
                 } else {
                     this.handlePlayerInput(e.key.toLowerCase());
                 }
@@ -404,6 +407,27 @@ class LoveJourneyGame {
         this.cameraY = this.targetCameraY; // Instant camera snap
         
         this.showToast('🧪 TESTING: At house door! Walk into it to test ending scene!');
+    }
+    
+    completeAllIngredients() {
+        console.log('🧪 TESTING: Completing all ingredients!');
+        
+        // Collect all ingredients instantly
+        this.INGREDIENTS.forEach(ingredient => {
+            ingredient.taken = true;
+            this.collected.add(ingredient.key);
+        });
+        
+        // Mark all ingredient positions as taken
+        this.ingredientPositions.forEach(ingredient => {
+            ingredient.taken = true;
+        });
+        
+        this.updateHUD();
+        this.showToast('🧪 TESTING: All ingredients collected! House spawning!');
+        
+        // Spawn the house entrance since all ingredients are now collected
+        this.spawnHouseEntrance();
     }
     
     handleCanvasClick(event) {
@@ -653,10 +677,7 @@ class LoveJourneyGame {
                 // Update max progress and camera target
                 if (this.player.worldY < this.maxPlayerProgress) {
                     this.maxPlayerProgress = this.player.worldY;
-                    // Only update camera if house isn't visible (prevents glitchy camera movement)
-                    if (!this.house.visible) {
-                        this.updateCameraTarget();
-                    }
+                    this.updateCameraTarget();
                 }
                 break;
             case 's':
