@@ -475,6 +475,11 @@ class LoveJourneyGame {
         // Hide ingredients tab
         document.getElementById('gameInfo').style.display = 'none';
         
+        // Ensure romantic music is playing
+        if (this.romanticMusic.paused) {
+            this.startRomanticMusic();
+        }
+        
         // Tofu soup animation state
         this.tofuSoup = {
             fadeOpacity: 0,
@@ -625,19 +630,19 @@ class LoveJourneyGame {
     }
     
     getDynamicLaneType(worldY) {
-        // Create sections: street (2-4 rows) + grass (1 row) + river (2-3 rows) + grass (1 row)
+        // Create sections: street (2-3 rows) + grass (1 row) + river (2-3 rows) + grass (1 row)
         const absY = Math.abs(worldY);
         
         // Use position to determine which section we're in and vary the sizes
         const sectionSeed = Math.floor(absY / 8) * 7919; // Change seed every ~8 rows
-        const streetRows = 2 + (sectionSeed % 3); // 2-4 street rows
+        const streetRows = 2 + (sectionSeed % 2); // 2-3 street rows
         const riverRows = 2 + ((sectionSeed * 3) % 2); // 2-3 river rows
         
         const totalSectionSize = streetRows + 1 + riverRows + 1; // street + grass + river + grass
         const positionInSection = absY % totalSectionSize;
         
         if (positionInSection < streetRows) {
-            return 'road'; // Street rows (2-4)
+            return 'road'; // Street rows (2-3)
         } else if (positionInSection === streetRows) {
             return 'grass'; // Single grass separator
         } else if (positionInSection < streetRows + 1 + riverRows) {
@@ -1001,13 +1006,13 @@ class LoveJourneyGame {
                 
                 // Reduce spawn rates in the final stretch to make it easier
                 let vehicleChance = 0.3;
-                let logChance = 0.3;
+                let logChance = 0.2; // Reduced from 0.3 to 0.2
                 
                 if (this.finalStretchMode && this.houseEntrance && 
                     worldRow <= this.houseEntrance.challengeZoneStart && 
                     worldRow >= this.houseEntrance.challengeZoneEnd) {
                     vehicleChance = 0.15; // Much LOWER vehicle density - easier!
-                    logChance = 0.35;     // More logs for easier crossing
+                    logChance = 0.25;     // Reduced from 0.35 to 0.25
                 }
                 
                 if (laneType === 'road' && Math.random() < vehicleChance) {
@@ -1024,8 +1029,8 @@ class LoveJourneyGame {
     spawnVehicle(worldRow, isFinalStretch = false) {
         const goingRight = Math.random() > 0.5;
         
-        // Make vehicles SLOWER and smaller in final stretch for easier gameplay
-        const baseSpeed = isFinalStretch ? (1.5 + Math.random() * 2) : (2 + Math.random() * 3);
+        // Make vehicles slower for better gameplay
+        const baseSpeed = isFinalStretch ? (1.2 + Math.random() * 1.5) : (1.5 + Math.random() * 2);
         const vehicleWidth = isFinalStretch ? this.TILE * 0.8 : this.TILE * 0.9;
         
         const vehicle = {
