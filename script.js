@@ -452,6 +452,9 @@ class LoveJourneyGame {
         this.gameState = 'tofuSoup';
         this.gameRunning = true;
         
+        // Hide ingredients tab
+        document.getElementById('gameInfo').style.display = 'none';
+        
         // Tofu soup animation state
         this.tofuSoup = {
             fadeOpacity: 0,
@@ -584,24 +587,50 @@ class LoveJourneyGame {
             return 'grass';
         }
         
-        // Check if we're in house lawn area - SAFE ZONE around house
-        if (this.house.visible && this.houseEntrance) {
-            // Large safe lawn area: from house entrance down to 10 tiles beyond grass field start
-            const safeZoneStart = this.houseEntrance.grassFieldStart + 10; // 10 tiles of extra safety
-            const safeZoneEnd = this.house.worldY - 3; // Up to just before house
+        // Check if we're in house area
+        if (this.house.entranceSpawned && this.houseEntrance) {
+            // Area beyond house (5 lanes past house) is all grass - out of bounds
+            if (worldY < this.house.worldY - 5) {
+                return 'grass'; // All grass beyond house
+            }
             
-            if (worldY <= safeZoneStart && worldY >= safeZoneEnd) {
-                return 'grass'; // All lawn, no dangers!
+            // ENTIRE house area from grassFieldStart to grassFieldEnd should be grass
+            if (worldY <= this.houseEntrance.grassFieldStart && worldY >= this.houseEntrance.grassFieldEnd) {
+                return 'grass'; // All house area is safe grass!
             }
         }
         
-        // For other negative worldY (forward progress), use pattern
-        const patternIndex = Math.abs(worldY + 1) % this.lanePattern.length;
-        return this.lanePattern[patternIndex];
+        // For other negative worldY (forward progress), use dynamic pattern
+        return this.getDynamicLaneType(worldY);
+    }
+    
+    getDynamicLaneType(worldY) {
+        // Create sections: street (2-4 rows) + grass (1 row) + river (2-3 rows) + grass (1 row)
+        const absY = Math.abs(worldY);
+        
+        // Use position to determine which section we're in and vary the sizes
+        const sectionSeed = Math.floor(absY / 8) * 7919; // Change seed every ~8 rows
+        const streetRows = 2 + (sectionSeed % 3); // 2-4 street rows
+        const riverRows = 2 + ((sectionSeed * 3) % 2); // 2-3 river rows
+        
+        const totalSectionSize = streetRows + 1 + riverRows + 1; // street + grass + river + grass
+        const positionInSection = absY % totalSectionSize;
+        
+        if (positionInSection < streetRows) {
+            return 'road'; // Street rows (2-4)
+        } else if (positionInSection === streetRows) {
+            return 'grass'; // Single grass separator
+        } else if (positionInSection < streetRows + 1 + riverRows) {
+            return 'water'; // River rows (2-3)
+        } else {
+            return 'grass'; // Single grass separator
+        }
     }
     
     startGame() {
         document.getElementById('titleScreen').classList.add('hidden');
+        // Show ingredients tab
+        document.getElementById('gameInfo').style.display = 'block';
         this.gameState = 'play';
         this.gameRunning = true;
         this.resetGame();
@@ -612,6 +641,8 @@ class LoveJourneyGame {
     restartGame() {
         document.getElementById('gameOver').classList.add('hidden');
         document.getElementById('endingModal').classList.add('hidden');
+        // Show ingredients tab again
+        document.getElementById('gameInfo').style.display = 'block';
         this.gameState = 'play';
         this.gameRunning = true;
         this.resetGame();
@@ -775,8 +806,7 @@ class LoveJourneyGame {
         this.finalStretchMode = true;
         
         // Don't snap camera to house immediately - let player discover it naturally
-        // Just give a hint that it's ahead
-        this.showToast('Your home awaits ahead! 🏠 Keep going north!');
+        // House will appear naturally as player moves forward
     }
     
     checkHouseEntry() {
@@ -799,6 +829,9 @@ class LoveJourneyGame {
         this.gameState = 'homeInterior';
         this.gameRunning = true; // Keep running for animations
         this.stopCarSounds();
+        
+        // Hide ingredients tab
+        document.getElementById('gameInfo').style.display = 'none';
         
         // Play door opening sound effect
         this.playDoorOpeningSound();
@@ -931,24 +964,30 @@ class LoveJourneyGame {
                     continue;
                 }
                 
-                // Don't spawn in house grass field (but allow in challenge zone)
-                if (this.house.visible && this.houseEntrance && 
-                    worldRow <= this.houseEntrance.grassFieldStart && 
-                    worldRow >= this.houseEntrance.grassFieldEnd) {
-                    continue;
+                // Don't spawn in house area at all
+                if (this.house.entranceSpawned && this.houseEntrance) {
+                    // Don't spawn beyond house (5 lanes past house)
+                    if (worldRow < this.house.worldY - 5) {
+                        continue; // Skip spawning beyond house
+                    }
+                    
+                    // Don't spawn in ENTIRE house area
+                    if (worldRow <= this.houseEntrance.grassFieldStart && worldRow >= this.houseEntrance.grassFieldEnd) {
+                        continue; // Skip spawning in entire house area
+                    }
                 }
                 
                 const laneType = this.getLaneType(worldRow);
                 
                 // Reduce spawn rates in the final stretch to make it easier
                 let vehicleChance = 0.3;
-                let logChance = 0.2;
+                let logChance = 0.3;
                 
                 if (this.finalStretchMode && this.houseEntrance && 
                     worldRow <= this.houseEntrance.challengeZoneStart && 
                     worldRow >= this.houseEntrance.challengeZoneEnd) {
                     vehicleChance = 0.15; // Much LOWER vehicle density - easier!
-                    logChance = 0.25;     // Slightly more logs for easier crossing
+                    logChance = 0.35;     // More logs for easier crossing
                 }
                 
                 if (laneType === 'road' && Math.random() < vehicleChance) {
@@ -1191,6 +1230,12 @@ class LoveJourneyGame {
                 break;
                 
             case 'showButton':
+                // Continue spawning hearts
+                if (this.homeInterior.animationTimer > 500) { // Spawn heart every 500ms
+                    this.spawnHeart();
+                    this.homeInterior.animationTimer = 0;
+                }
+                
                 // Keep hearts floating while showing button
                 for (let i = this.homeInterior.hearts.length - 1; i >= 0; i--) {
                     const heart = this.homeInterior.hearts[i];
@@ -1264,7 +1309,7 @@ class LoveJourneyGame {
         for (let i = 0; i < 3; i++) {
             const steam = {
                 x: this.W/2 + (Math.random() - 0.5) * 80,
-                y: this.H/2 + 50,
+                y: this.H/2 + 100,
                 opacity: 0.8,
                 scale: 0.5 + Math.random() * 0.3
             };
@@ -1420,13 +1465,13 @@ class LoveJourneyGame {
     }
     
     drawHouse() {
-        // Only draw house if it's visible AND far from starting area
-        if (!this.house.visible || this.house.worldY === null || this.house.worldY >= -5) return;
+        // Always draw house if entrance has been spawned (house coordinates are set)
+        if (!this.house.entranceSpawned || this.house.worldY === null) return;
         
         const screenX = this.house.gridX * this.TILE;
         const screenY = (this.house.worldY * this.TILE) - this.cameraY;
         
-        // Only draw if on screen and far from start
+        // Only draw if on screen
         if (screenY > -this.TILE * 3 && screenY < this.H + this.TILE) {
             this.drawHouseEntrance(screenY);
             this.drawHouseStructure(screenX, screenY);
@@ -2008,39 +2053,44 @@ class LoveJourneyGame {
         // Love messages array
         const loveMessages = [
             "everything in the world is perfect when you hug me tight",
-            "you make sure I eat very well", 
+            "you make sure I eat very well",
             "you make me feel so safe and protected",
             "you are so curious and love learning",
             "you go out of your way to help me",
             "you have the dorkiest fascination with hexagons and materials",
-            "Anything I do with you is 100x more fun",
+            "anything I do with you is 100x more fun",
             "youre so handsome it makes me blush sometimes",
             "you are always down for an adventure",
-            "your decision making and principles constantly inspire me"
+            "your decision making and principles constantly inspire me",
+            "you have the kindest heart",
+            "you give the warmest hugs",
+            "you listen to me patiently",
+            "you support my dreams",
+            "you are such a dependable and loyal friend"
         ];
         
-        // Title
+        // Title - moved up with margin
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.font = 'bold 24px Arial';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('Reasons why I love you', this.W / 2, 60);
+        this.ctx.fillText('Reasons why I love you', this.W / 2, 40);
         
-        // Draw tofu soup image if loaded
-        if (this.tofuSoupImage && this.tofuSoupImage.complete) {
-            const imageWidth = 300;
-            const imageHeight = 300;
-            const imageX = (this.W - imageWidth) / 2;
-            const imageY = this.H / 2 - imageHeight / 2 + 120;
-            this.ctx.drawImage(this.tofuSoupImage, imageX, imageY, imageWidth, imageHeight);
-        }
-        
-        // Draw love messages as plain text above the bowl
+        // Draw love messages as plain text - moved up
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'left';
         
-        const startY = 100;
-        const lineHeight = 20;
+        const startY = 70; // Moved up from 100 to 70
+        const lineHeight = 18; // Slightly tighter spacing
+        
+        // Draw tofu soup image if loaded - moved down
+        if (this.tofuSoupImage && this.tofuSoupImage.complete) {
+            const imageWidth = 250; // Slightly smaller
+            const imageHeight = 250;
+            const imageX = (this.W - imageWidth) / 2;
+            const imageY = this.H - imageHeight - 20; // Bottom with margin
+            this.ctx.drawImage(this.tofuSoupImage, imageX, imageY, imageWidth, imageHeight);
+        }
         loveMessages.forEach((message, index) => {
             const y = startY + index * lineHeight;
             this.ctx.fillText(`${index + 1}. ${message}`, 50, y);
