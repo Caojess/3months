@@ -148,6 +148,8 @@ class LoveJourneyGame {
         // Pickup sound effect
         this.pickupSound = new Audio('pickup-sound.wav');
         this.pickupSound.volume = this.audioSettings.pickupSoundVolume;
+        this.pickupSound.preload = 'auto';
+        this.pickupSound.load(); // Force immediate load
         
         // Car sounds - with natural breaks
         this.carSounds = new Audio('car-sounds.wav');
@@ -226,9 +228,27 @@ class LoveJourneyGame {
     }
     
     playPickupSound() {
-        // Reset and play pickup sound
-        this.pickupSound.currentTime = 0;
-        this.pickupSound.play().catch(e => console.log('Pickup sound play failed:', e));
+        console.log('Playing pickup sound'); // Debug log
+        
+        // Create a clone of the pickup sound to allow overlapping plays
+        try {
+            const pickupClone = this.pickupSound.cloneNode();
+            pickupClone.volume = this.audioSettings.pickupSoundVolume;
+            pickupClone.currentTime = 0;
+            pickupClone.play().then(() => {
+                console.log('Pickup sound played successfully');
+            }).catch(e => {
+                console.log('Clone failed, trying original:', e);
+                // Fallback: try original sound if clone fails
+                this.pickupSound.currentTime = 0;
+                this.pickupSound.play().catch(e2 => console.log('Pickup sound play failed:', e2));
+            });
+        } catch (e) {
+            console.log('Clone creation failed, using original:', e);
+            // Fallback: use original method if cloning fails
+            this.pickupSound.currentTime = 0;
+            this.pickupSound.play().catch(e => console.log('Pickup sound play failed:', e));
+        }
     }
     
     
