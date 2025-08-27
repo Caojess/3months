@@ -1011,6 +1011,17 @@ class LoveJourneyGame {
                 let vehicleChance = 0.2; // Reduced from 0.3 to 0.2
                 let logChance = 0.2;
                 
+                // Check if we're in a 3-lane street section (reduce car spawns)
+                if (laneType === 'road') {
+                    const absY = Math.abs(worldRow);
+                    const sectionIndex = Math.floor(absY / 7);
+                    const streetRows = 2 + (sectionIndex % 2); // Same logic as getDynamicLaneType
+                    
+                    if (streetRows === 3) {
+                        vehicleChance *= 0.7; // Reduce by 30% on 3-lane streets
+                    }
+                }
+                
                 if (this.finalStretchMode && this.houseEntrance && 
                     worldRow <= this.houseEntrance.challengeZoneStart && 
                     worldRow >= this.houseEntrance.challengeZoneEnd) {
