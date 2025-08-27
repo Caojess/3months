@@ -552,11 +552,14 @@ class LoveJourneyGame {
         // Only add ingredients that haven't been collected yet
         const missingIngredients = this.INGREDIENTS.filter(ing => !this.collected.has(ing.key));
         
+        // Clean up taken ingredients
         this.ingredientPositions = this.ingredientPositions.filter(pos => !pos.taken);
         
         missingIngredients.forEach((ingredient) => {
-            // Check if this ingredient is already placed
-            const alreadyPlaced = this.ingredientPositions.some(pos => pos.key === ingredient.key);
+            // Check if this ingredient is already placed and visible
+            const alreadyPlaced = this.ingredientPositions.some(pos => 
+                pos.key === ingredient.key && !pos.taken
+            );
             
             if (!alreadyPlaced) {
                 this.spawnIngredientAhead(ingredient);
@@ -599,8 +602,8 @@ class LoveJourneyGame {
     continuouslySpawnIngredients() {
         this.continuousSpawnTimer++;
         
-        // Spawn missing ingredients every 3 seconds (180 frames at 60fps)
-        if (this.continuousSpawnTimer >= 180) {
+        // Spawn missing ingredients every 2 seconds (120 frames at 60fps) - more frequent
+        if (this.continuousSpawnTimer >= 120) {
             this.respawnMissingIngredients();
             this.continuousSpawnTimer = 0;
         }
@@ -630,25 +633,25 @@ class LoveJourneyGame {
     }
     
     getDynamicLaneType(worldY) {
-        // Create sections: street (2-3 rows) + grass (1 row) + river (2-3 rows) + grass (1 row)
+        // Simple alternating pattern: 2-3 streets, 1 grass, 2-3 rivers, 1 grass
         const absY = Math.abs(worldY);
         
-        // Use position to determine which section we're in and vary the sizes
-        const sectionSeed = Math.floor(absY / 8) * 7919; // Change seed every ~8 rows
-        const streetRows = 2 + (sectionSeed % 2); // 2-3 street rows
-        const riverRows = 2 + ((sectionSeed * 3) % 2); // 2-3 river rows
+        // Create 7-row repeating sections
+        const sectionSize = 7;
+        const sectionIndex = Math.floor(absY / sectionSize);
+        const positionInSection = absY % sectionSize;
         
-        const totalSectionSize = streetRows + 1 + riverRows + 1; // street + grass + river + grass
-        const positionInSection = absY % totalSectionSize;
+        // Alternate between 2 and 3 street rows based on section
+        const streetRows = 2 + (sectionIndex % 2); // Alternates between 2 and 3
         
         if (positionInSection < streetRows) {
-            return 'road'; // Street rows (2-3)
+            return 'road'; // Street section (2 or 3 rows)
         } else if (positionInSection === streetRows) {
-            return 'grass'; // Single grass separator
-        } else if (positionInSection < streetRows + 1 + riverRows) {
-            return 'water'; // River rows (2-3)
+            return 'grass'; // 1 grass separator
+        } else if (positionInSection < streetRows + 3) {
+            return 'water'; // 2 water rows  
         } else {
-            return 'grass'; // Single grass separator
+            return 'grass'; // Final grass separator
         }
     }
     
@@ -1004,14 +1007,14 @@ class LoveJourneyGame {
                 
                 const laneType = this.getLaneType(worldRow);
                 
-                // Reduce spawn rates in the final stretch to make it easier
-                let vehicleChance = 0.3;
-                let logChance = 0.2; // Reduced from 0.3 to 0.2
+                // Reduce spawn rates for better gameplay
+                let vehicleChance = 0.2; // Reduced from 0.3 to 0.2
+                let logChance = 0.2;
                 
                 if (this.finalStretchMode && this.houseEntrance && 
                     worldRow <= this.houseEntrance.challengeZoneStart && 
                     worldRow >= this.houseEntrance.challengeZoneEnd) {
-                    vehicleChance = 0.15; // Much LOWER vehicle density - easier!
+                    vehicleChance = 0.1; // Even lower vehicle density
                     logChance = 0.25;     // Reduced from 0.35 to 0.25
                 }
                 
@@ -1027,10 +1030,20 @@ class LoveJourneyGame {
     }
     
     spawnVehicle(worldRow, isFinalStretch = false) {
-        const goingRight = Math.random() > 0.5;
+        // Check if there are existing vehicles in this row to maintain same direction
+        const existingVehicles = this.vehicles.filter(v => v.worldY === worldRow);
+        let goingRight;
         
-        // Make vehicles slower for better gameplay
-        const baseSpeed = isFinalStretch ? (1.2 + Math.random() * 1.5) : (1.5 + Math.random() * 2);
+        if (existingVehicles.length > 0) {
+            // Use same direction as existing vehicles in this row
+            goingRight = existingVehicles[0].speed > 0;
+        } else {
+            // Determine direction based on row for consistency
+            goingRight = worldRow % 2 === 0; // Even rows go right, odd rows go left
+        }
+        
+        // Make vehicles much slower for better gameplay
+        const baseSpeed = isFinalStretch ? (0.8 + Math.random() * 1.0) : (1.0 + Math.random() * 1.2);
         const vehicleWidth = isFinalStretch ? this.TILE * 0.8 : this.TILE * 0.9;
         
         const vehicle = {
@@ -1053,7 +1066,7 @@ class LoveJourneyGame {
             3 + Math.floor(Math.random() * 2) : // 3-4 grid units (longer!)
             2 + Math.floor(Math.random() * 3);  // 2-4 grid units long
         
-        const baseSpeed = isFinalStretch ? (0.8 + Math.random() * 1.5) : (1 + Math.random() * 2);
+        const baseSpeed = isFinalStretch ? (0.6 + Math.random() * 1.0) : (0.8 + Math.random() * 1.2);
         
         const log = {
             gridX: goingRight ? -logLength : this.GRID_W + 1,
