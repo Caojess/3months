@@ -1710,23 +1710,40 @@ class LoveJourneyGame {
     }
     
     drawIngredients() {
-        this.ingredientPositions.forEach(ingredient => {
+        this.ingredientPositions.forEach((ingredient, index) => {
             if (!ingredient.taken) {
                 const screenX = ingredient.gx * this.TILE;
                 const screenY = (ingredient.gy * this.TILE) - this.cameraY;
                 
                 // Only draw if on screen
                 if (screenY > -this.TILE && screenY < this.H + this.TILE) {
-                    this.drawIngredient(ingredient.key, screenX + this.TILE/2, screenY + this.TILE/2);
+                    this.drawIngredient(ingredient.key, screenX + this.TILE/2, screenY + this.TILE/2, index);
                 }
             }
         });
     }
     
-    drawIngredient(type, centerX, centerY) {
+    drawIngredient(type, centerX, centerY, index = 0) {
         const size = 16;
-        const x = centerX - size/2;
-        const y = centerY - size/2;
+        
+        // Add subtle animation based on time and ingredient index for variation
+        const time = Date.now() * 0.001; // Slow animation
+        const offset = index * 1.5; // Different phase for each ingredient
+        
+        // Small bounce effect (2-3 pixels max to stay within tile)
+        const bounceY = Math.sin(time * 2 + offset) * 2;
+        
+        // Subtle rotation
+        const rotation = Math.sin(time * 1.5 + offset) * 0.15; // Small rotation in radians
+        
+        // Apply transformations
+        this.ctx.save();
+        this.ctx.translate(centerX, centerY + bounceY);
+        this.ctx.rotate(rotation);
+        
+        // Draw from center after transformation
+        const x = -size/2;
+        const y = -size/2;
         
         switch(type) {
             case 'tofu':
@@ -1793,6 +1810,9 @@ class LoveJourneyGame {
                 this.ctx.fillRect(x + 6, y, 4, 4);
                 break;
         }
+        
+        // Restore canvas transformation
+        this.ctx.restore();
     }
     
     drawPlayer() {
@@ -2057,15 +2077,35 @@ class LoveJourneyGame {
     }
     
     drawTofuSoupButton() {
+        // Add animation using time-based oscillation
+        const time = Date.now() * 0.002; // Slow animation speed
+        const bounceOffset = Math.sin(time) * 4; // Gentle bounce of 4 pixels
+        const scaleEffect = 1 + Math.sin(time * 0.8) * 0.02; // Subtle scale pulse (2% variation)
+        
         // Draw button right below the characters
-        const buttonW = 250;
-        const buttonH = 80;
+        const baseButtonW = 250;
+        const baseButtonH = 80;
+        const buttonW = baseButtonW * scaleEffect;
+        const buttonH = baseButtonH * scaleEffect;
         const buttonX = (this.W - buttonW) / 2;
         const characterY = this.H * 0.75; // Same as character position
-        const buttonY = characterY + 50; // Just below characters
+        const buttonY = characterY + 50 + bounceOffset; // Just below characters with bounce
         
-        // Store button bounds for clicking
-        this.tofuSoupButton = { x: buttonX, y: buttonY, w: buttonW, h: buttonH };
+        // Store button bounds for clicking (use base dimensions for consistent hitbox)
+        this.tofuSoupButton = { x: (this.W - baseButtonW) / 2, y: characterY + 50, w: baseButtonW, h: baseButtonH };
+        
+        // Glowing effect around button
+        const glowRadius = 15 + Math.sin(time * 1.5) * 5;
+        const glowGradient = this.ctx.createRadialGradient(
+            buttonX + buttonW/2, buttonY + buttonH/2, buttonW/2,
+            buttonX + buttonW/2, buttonY + buttonH/2, buttonW/2 + glowRadius
+        );
+        glowGradient.addColorStop(0, 'rgba(255, 140, 0, 0)');
+        glowGradient.addColorStop(0.5, 'rgba(255, 140, 0, 0.2)');
+        glowGradient.addColorStop(1, 'rgba(255, 99, 71, 0.4)');
+        this.ctx.fillStyle = glowGradient;
+        this.ctx.fillRect(buttonX - glowRadius, buttonY - glowRadius, 
+                         buttonW + glowRadius * 2, buttonH + glowRadius * 2);
         
         // Semi-transparent background behind button for visibility
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
@@ -2078,9 +2118,16 @@ class LoveJourneyGame {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(buttonX, buttonY, buttonW, buttonH);
         
-        // Button border
+        // Add shimmer effect on top
+        const shimmerGradient = this.ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH/3);
+        shimmerGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        shimmerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        this.ctx.fillStyle = shimmerGradient;
+        this.ctx.fillRect(buttonX, buttonY, buttonW, buttonH/3);
+        
+        // Button border with animated thickness
         this.ctx.strokeStyle = '#8B4513';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 3 + Math.sin(time * 2) * 0.5;
         this.ctx.strokeRect(buttonX, buttonY, buttonW, buttonH);
         
         // Button text - BIGGER
@@ -2089,9 +2136,13 @@ class LoveJourneyGame {
         this.ctx.textAlign = 'center';
         this.ctx.fillText('Enjoy Tofu Soup', buttonX + buttonW/2, buttonY + buttonH/2 + 8);
         
-        // Add bowl emoji - BIGGER
+        // Add bowl emoji - BIGGER with rotation animation
+        this.ctx.save();
+        this.ctx.translate(buttonX + buttonW/2, buttonY + buttonH/2 - 18);
+        this.ctx.rotate(Math.sin(time * 2) * 0.08); // Gentle wobble
         this.ctx.font = '32px Arial';
-        this.ctx.fillText('', buttonX + buttonW/2, buttonY + buttonH/2 - 18);
+        this.ctx.fillText('', 0, 0);
+        this.ctx.restore();
     }
     
     drawTofuSoup() {
