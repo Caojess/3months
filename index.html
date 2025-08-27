@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lets make tofu soup</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="gameInfo">
+            <div id="ingredients">
+                <span>Ingredients: </span>
+                <div id="ingredientList"></div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="480" height="640"></canvas>
+        
+        <div id="gameOver" class="hidden">
+            <div id="gameOverContent">
+                <h2>Game Over</h2>
+                <p>Try again! I believe in you!</span></p>
+                <button id="restartBtn">Play Again</button>
+            </div>
+        </div>
+        
+        <div id="titleScreen">
+            <h1>Harry! My love! </h1>
+            <p>I need your help gathering ingredients for the perfect tofu soup!</p>
+            <p>(Use WASD or Arrow Keys to move & make sure your volume is on)</p>
+            <button id="startBtn">Press Space/Enter to Start</button>
+        </div>
+        
+        <div id="endingModal" class="hidden">
+            <div id="endingContent">
+                <div id="kissSection">
+                    <img id="kissImage" src="" alt="Kiss" class="hidden">
+                    <div id="defaultKiss">💋 *Kiss* 💋</div>
+                </div>
+                <div id="reasonsSection">
+                    <h3>10 Reasons I Love You:</h3>
+                    <ol id="reasonsList"></ol>
+                </div>
+                <div id="endingButtons">
+                    <button id="bonusBtn">Start Bonus: Cat Chaos 🐈</button>
+                    <button id="playAgainBtn">Play Again</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="bonusModal" class="hidden">
+            <div id="bonusContent">
+                <h2>Cat Chaos Survived!</h2>
+                <p>You made it through the 4 AM stray cat encounter!</p>
+                <p>Goodnight, my love 💤</p>
+                <button id="backToTitleBtn">Back to Title</button>
+            </div>
+        </div>
+        
+        <div id="customizeModal" class="hidden">
+            <div id="customizeContent">
+                <h3>Customize Your Game</h3>
+                <div class="customize-section">
+                    <label>Your Name:</label>
+                    <input type="text" id="playerName" placeholder="Your name">
+                </div>
+                <div class="customize-section">
+                    <label>Boyfriend's Name:</label>
+                    <input type="text" id="boyfriendName" placeholder="Boyfriend's name">
+                </div>
+                <div class="customize-section">
+                    <label>Player Sprite (PNG):</label>
+                    <input type="file" id="playerImage" accept="image/png">
+                </div>
+                <div class="customize-section">
+                    <label>Kiss Image (GIF/PNG):</label>
+                    <input type="file" id="kissImageUpload" accept="image/*">
+                </div>
+                <div class="customize-section">
+                    <label>10 Reasons I Love You (one per line):</label>
+                    <textarea id="reasonsText" rows="10" placeholder="Reason 1\nReason 2\n..."></textarea>
+                </div>
+                <div class="customize-buttons">
+                    <button id="saveCustomBtn">Save</button>
+                    <button id="cancelCustomBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="toast" class="hidden"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

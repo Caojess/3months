@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/Users/jessicacao/Downloads/**)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/jessicacao/Downloads"
+    ]
+  }
+}

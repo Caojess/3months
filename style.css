@@ -1,0 +1,344 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #FFE4E6, #FFF0F5, #F0F8FF);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+#gameContainer {
+    position: relative;
+    border: 3px solid #F8BBD9;
+    border-radius: 15px;
+    background: transparent;
+    box-shadow: 0 10px 25px rgba(248, 187, 217, 0.4);
+    overflow: hidden;
+    width: 480px;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#gameInfo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #F8BBD9, #FFB6C1);
+    color: #8B4B7C;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 15px 15px 0 0;
+}
+
+#ingredients {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#ingredientList {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ingredient-item {
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    background: rgba(255,255,255,0.6);
+    margin: 2px;
+}
+
+.ingredient-item.collected {
+    background: #B8E6B8;
+    color: #2E7D2E;
+}
+
+#gameButtons {
+    display: flex;
+    gap: 10px;
+}
+
+#gameButtons button {
+    padding: 5px 10px;
+    font-size: 12px;
+    background: rgba(255,255,255,0.8);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#gameButtons button:hover {
+    background: rgba(255,255,255,1);
+}
+
+#gameCanvas {
+    display: block;
+    background: #90EE90;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    width: 480px !important;
+    height: 640px !important;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+#gameOver {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+#gameOverContent {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+#gameOverContent h2 {
+    color: #C67B9B;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+#gameOverContent p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+#titleScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 228, 230, 0.95), rgba(255, 240, 245, 0.95));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    color: #8B4B7C;
+    text-align: center;
+}
+
+#titleScreen h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+#titleScreen p {
+    font-size: 1.2em;
+    margin: 10px 0;
+    max-width: 400px;
+}
+
+button {
+    background: linear-gradient(135deg, #F8BBD9, #FFB6C1);
+    color: #8B4B7C;
+    border: 2px solid #F8BBD9;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+button:hover {
+    background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(248, 187, 217, 0.5);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Modal Styles */
+#endingModal, #bonusModal, #customizeModal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+#endingContent, #bonusContent, #customizeContent {
+    background: linear-gradient(135deg, #FFF0F5, #FFE4E6);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 15px 30px rgba(248, 187, 217, 0.4);
+    color: #8B4B7C;
+    border: 3px solid #F8BBD9;
+}
+
+#endingContent {
+    display: flex;
+    gap: 30px;
+    max-width: 700px;
+}
+
+#kissSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#defaultKiss {
+    font-size: 3em;
+    margin: 20px 0;
+}
+
+#kissImage {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 10px;
+}
+
+#reasonsSection {
+    flex: 1;
+    text-align: left;
+}
+
+#reasonsList {
+    text-align: left;
+    margin: 20px 0;
+    padding-left: 20px;
+}
+
+#reasonsList li {
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+#endingButtons {
+    flex: 100%;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Customize Modal */
+.customize-section {
+    margin: 15px 0;
+    text-align: left;
+}
+
+.customize-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.customize-section input, .customize-section textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #F8BBD9;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #FFF8F0;
+    color: #8B4B7C;
+}
+
+.customize-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Toast */
+#toast {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 200;
+    font-size: 14px;
+    animation: toastSlide 0.3s ease-out;
+}
+
+@keyframes toastSlide {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Animation classes for game elements */
+.explosion {
+    animation: explode 0.5s ease-out forwards;
+}
+
+@keyframes explode {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(3);
+        opacity: 0;
+    }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 20%, 40%, 60%, 80%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+}
